@@ -1,0 +1,299 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <String>
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define RESET_OLED -1
+#define DIREC_OLED 0x3C
+
+#define upB 18
+#define downB 19
+#define selectB 23
+
+ #define LEDR 13
+ #define LEDG 4 
+ #define LEDB 15  
+ #define Rojo_Canal 0  
+ #define Verde_canal 1  
+ #define Azul_canal 2  
+ #define pwm_Frecuencia 10000 
+ #define pwm_resolucion 8
+
+#define in3 25 //Motor derecha
+#define in4 26 //Motor izquierda
+
+#define xPin 34
+#define yPin 35
+#define buttonPin 32
+
+int stUpB=0,stDownB=0,stSelectB=0;
+int ym=18,yl=0,yt=0,ys=0; 
+int xPosition = 0;
+int yPosition = 0;
+int buttonState = 0;
+
+Adafruit_SSD1306 display(SCREEN_WIDTH,SCREEN_HEIGHT,&Wire,RESET_OLED);
+
+void setup() {
+  Serial.begin(9600);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, DIREC_OLED)){
+    Serial.println(F("Fallo en la asignacion de SSD1306"));
+    }
+
+  pinMode(upB,INPUT_PULLUP);
+  pinMode(downB,INPUT_PULLUP);
+  pinMode(selectB,INPUT_PULLUP);
+  pinMode (in3, OUTPUT);
+  pinMode (in4, OUTPUT);
+
+  pinMode(xPin, INPUT);
+  pinMode(yPin, INPUT);
+  pinMode(2, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+
+  ledcAttachPin(LEDR, Rojo_Canal);  
+  ledcAttachPin(LEDG, Verde_canal);  
+  ledcAttachPin(LEDB, Azul_canal);   
+  ledcSetup(Rojo_Canal, pwm_Frecuencia, pwm_resolucion);  
+  ledcSetup(Verde_canal, pwm_Frecuencia, pwm_resolucion);  
+  ledcSetup(Azul_canal, pwm_Frecuencia, pwm_resolucion);   
+
+  RGB_Color(0,0,0);
+  display.clearDisplay(); 
+  display.setTextSize(1);
+  display.setTextColor(WHITE); 
+  display.setCursor(0,0); 
+  display.println("MENU");
+  display.drawRect(3, ym,  75, 11 , WHITE);
+  delay(250); 
+  display.setCursor(5,20);
+  display.println("LED RGB");
+  display.setCursor(5,35);
+  display.println("MOTOR");
+  display.setCursor(5,50);
+  display.println("SENSOR");
+  display.display();
+   
+}
+
+void loop() {
+  stUpB = digitalRead(upB);
+  stDownB = digitalRead(downB);
+  stSelectB = digitalRead(selectB);
+  xPosition = analogRead(xPin);
+  yPosition = analogRead(yPin);
+  buttonState = digitalRead(buttonPin);
+
+Serial.println("X: ");
+  Serial.println(xPosition);
+  Serial.println("Y: ");
+  Serial.println(yPosition);
+  Serial.println("Button: ");
+  Serial.println(buttonState);
+  delay(250);
+  
+  if(stDownB==1){
+    Down();
+    } 
+
+  if(stUpB==1){
+    Up();
+    }
+
+  if(stSelectB==1){
+    Select();
+    }  
+
+  if((yl==44) ){
+    RGB_Color(0,0,0);
+    }  
+
+  if((yl==14)){
+    RGB_Color(255,0,0); // Rojo  
+    delay(50);
+    } 
+
+  if((yl==24)){
+    RGB_Color(0,255,0);
+    delay(50);
+    }
+
+  if((yl==34)){
+    RGB_Color(0,0,255);
+    delay(50);
+    }
+
+  if((stSelectB==1) && (ys==48)){
+    RGB_Color(0,0,0);
+    Main();
+    }    
+}
+
+void Down(){
+  //P1
+  if(((stDownB==1) && (ym==18)) or ((stDownB==1) && (ym==33)) or ((stDownB==1) && (ym==48))){
+    display.drawRect(3, ym,  75, 11 , BLACK);
+    ym=ym+15;
+    display.drawRect(3, ym,  75, 11 , WHITE);
+    delay(250);
+    display.display();
+    }
+    
+  //P2
+    if(((stDownB==1) && (yl==14)) or ((stDownB==1) && (yl==24)) or ((stDownB==1) && (yl==34)) or ((stDownB==1) && (yl==44))){
+    display.drawRect(3, yl,  75, 11 , BLACK);
+    yl=yl+10;
+ 
+    display.drawRect(3, yl,  75, 11 , WHITE);
+    delay(250);
+    display.display();
+    }
+    
+  //P3
+  if(((stDownB==1) && (yt==19)) or ((stDownB==1) && (yt==29)) or ((stDownB==1) && (yt==39))){
+    display.drawRect(3, yt,  75, 11 , BLACK);
+    yt=yt+10;
+    display.drawRect(3, yt,  75, 11 , WHITE);
+    delay(250);
+    display.display();
+    } 
+   }
+   
+void Up(){
+  if(((stUpB==1) && (ym==18)) or ((stUpB==1) && (ym==33)) or ((stUpB==1) && (ym==48))){
+    display.drawRect(3, ym,  75, 11 , BLACK);
+    ym=ym-15;
+    display.drawRect(3, ym,  75, 11 , WHITE);
+    delay(250);
+    display.display(); 
+    }
+
+  //P2
+  if(((stUpB==1) && (yl==14)) or ((stUpB==1) && (yl==24)) or ((stUpB==1) && (yl==34)) or ((stUpB==1) && (yl==44))){
+    display.drawRect(3, yl,  75, 11 , BLACK);
+    yl=yl-10;
+    display.drawRect(3, yl,  75, 11 , WHITE);
+    delay(250);
+    display.display();
+    } 
+
+  if(((stUpB==1) && (yt==19)) or ((stUpB==1) && (yt==29)) or ((stUpB==1) && (yt==39))){
+    display.drawRect(3, yt,  75, 11 , BLACK);
+    yt=yt-10;
+    display.drawRect(3, yt,  75, 11 , WHITE);
+    delay(250);
+    display.display();
+    }     
+  } 
+
+void Select(){
+  if((stSelectB==1)&& (ym==18)){
+    ym = 0;
+    yl = 14;
+    display.clearDisplay(); 
+    display.setTextSize(1);
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("RGB");
+    display.drawRect(3, yl,  75, 11 , WHITE);
+    delay(250); 
+    display.setCursor(5,16);    
+    display.println("ROJO");
+    display.setCursor(5,26);
+    display.println("VERDE");
+    display.setCursor(5,36);
+    display.println("AZUL");
+    display.setCursor(5,46);
+    display.println("VOLVER");
+    display.display(); 
+    
+    }
+    
+  if((stSelectB==1) && (ym==33)){
+    Motor();
+    } 
+    
+  if((stSelectB==1) && (ym==48)){
+    ym=0;
+    ys=48;
+    display.clearDisplay(); 
+    display.setTextSize(1);
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("LECTURA DE MOVIMIENTO");
+    display.drawRect(3, ys,  75, 11 , WHITE);
+    delay(250); 
+    
+    
+    
+   
+      
+    display.setCursor(5,50);
+    display.println("VOLVER");
+    display.display();
+    }
+    delay(10000);
+    
+  if(((stSelectB==1) && (yl==44)) or ((stSelectB==1) && (yt==39))){
+    RGB_Color(0,0,0);
+    Main();
+    }  
+  } 
+
+  void RGB_Color(int i, int j, int k){  
+  i=255-i;
+  j=255-j;
+  k=255-k;
+  ledcWrite(Rojo_Canal, i);   
+  ledcWrite(Verde_canal, j);  
+  ledcWrite(Azul_canal, k);   
+  }
+
+  void Main(){
+    ym=18;
+    yl=0;
+    display.clearDisplay(); 
+    display.setTextSize(1);
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("MENU");
+    display.drawRect(3, ym,  75, 11 , WHITE);
+    delay(250); 
+    display.setCursor(5,20);
+    display.println("LED RGB");
+    display.setCursor(5,35);
+    display.println("MOTOR");
+    display.setCursor(5,50);
+    display.println("SENSOR");
+    display.display();
+    }
+
+  void Motor(){
+    ym=0;
+    yt=19;
+    display.clearDisplay(); 
+    display.setTextSize(1);
+    display.setTextColor(WHITE); 
+    display.setCursor(0,0); 
+    display.println("MOVIMIENTO MOTOR");
+    display.drawRect(3, yt,  75, 11 , WHITE);
+    delay(250); 
+    display.setCursor(5,21);    
+    display.println("DERECHA");
+    display.setCursor(5,31);
+    display.println("IZQUIERDA");
+    display.setCursor(5,41);
+    display.println("VOLVER");
+    display.display();
+
+    if(yt==19){
+    digitalWrite(in3, LOW);
+    digitalWrite(in4, HIGH);
+    }
+
+    if(yt==29){
+    digitalWrite(in3, HIGH);
+    digitalWrite(in4, LOW);
+    }
+    }
